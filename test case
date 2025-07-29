@@ -1,0 +1,60 @@
+`timescale 1ns/1ps
+
+module testbench;
+  logic clk, start, done;
+  logic lda, ldq, ldm, clra, clrq, clrff, sfta, sftq;
+  logic addsub, decr, ldcnt;
+  logic q0, qm1, eqz;
+
+  logic signed [15:0] data_in;
+  logic signed [31:0] product;
+
+  
+  BOOTH UUT (
+    .lda(lda), .ldq(ldq), .ldm(ldm), .clra(clra), .clrq(clrq), .clrff(clrff),
+    .sfta(sfta), .sftq(sftq), .addsub(addsub), .decr(decr), .ldcnt(ldcnt),
+    .data_in(data_in), .clk(clk),
+    .qm1(qm1), .eqz(eqz), .product(product)
+  );
+
+  controller CTRL (
+    .lda(lda), .clra(clra), .sfta(sfta), .ldq(ldq), .clrq(clrq), .sftq(sftq),
+    .ldm(ldm), .clrff(clrff), .addsub(addsub), .decr(decr), .ldcnt(ldcnt), .done(done),
+    .clk(clk), .q0(q0), .qm1(qm1), .start(start), .eqz(eqz)
+  );
+
+  assign q0 = UUT.q[0];  
+
+  
+  always #5 clk = ~clk;
+
+  initial begin
+    
+    clk = 0;
+    start = 0;
+
+   
+    #10;
+    data_in = -3;  
+    start = 1;
+    #10;
+    start = 0;
+    #10;
+    data_in = 2;  
+
+
+    wait (done);
+    #10;
+
+    $display("? DONE: %0d * %0d = %0d (binary = %032b)",
+             $signed(UUT.m), $signed(UUT.q), $signed(product), product);
+
+    $finish;
+  end
+
+
+  initial begin
+    $dumpfile("booth.vcd");
+    $dumpvars(0, testbench);
+  end
+endmodule
